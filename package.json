@@ -1,0 +1,16 @@
+{
+  "name": "devdia-backend",
+  "version": "0.0.0",
+  "description": "simple backend for a small social media app.",
+  "main": "dist/index.js",
+  "author": "Mariodev",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/Meriegg/devdia-backend"
+  },
+  "private": false,
+  "devDependencies": {
+    "nodemon": "^2.0.16",
+    "prisma": "^3.15.2"
+  }
+}
