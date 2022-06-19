@@ -1,6 +1,5 @@
 import express from "express";
 import dotenv from "dotenv";
-import cors from "cors";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import typeDefs from "./graphql/typedefs";
@@ -17,14 +16,23 @@ dotenv.config();
   const GQLServer = new ApolloServer({
     typeDefs,
     resolvers,
+    context: ({ req, res }) => {
+      return { req, res };
+    },
   });
   await GQLServer.start();
 
-  app.use(cors({ origin: "*" }));
+  // app.use(cors({ origin: "https://studio.apollographql.com", credentials: true }));
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(bodyParser.json({ limit: "1mb" }));
   app.use(cookieParser());
-  GQLServer.applyMiddleware({ app });
+  GQLServer.applyMiddleware({
+    app,
+    cors: {
+      origin: "https://studio.apollographql.com",
+      credentials: true,
+    },
+  });
 
   app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

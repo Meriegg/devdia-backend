@@ -1,7 +1,9 @@
 import prisma from "../../prisma/index";
 import jwt from "jsonwebtoken";
-import { ApolloError } from "apollo-server-express";
+import setRefreshToken from "../../utils/setRefreshToken";
+import { ApolloError, UserInputError } from "apollo-server-express";
 import * as argon from "argon2";
+import { GQLContextType } from "src/types";
 
 export const userResolvers = {
   Query: {
@@ -19,7 +21,7 @@ export const userResolvers = {
     },
   },
   Mutation: {
-    register: async (_: any, { args }: any) => {
+    register: async (_: any, { args }: any, { res }: GQLContextType) => {
       try {
         const JWT_SECRET = process.env.JWT_SECRET;
         if (!JWT_SECRET) {
@@ -35,7 +37,7 @@ export const userResolvers = {
           throw new ApolloError("User already exists!");
         }
 
-        const hashedPass = await argon.hash(args.password);
+        const hashedPass = await argon.hash(args.password, { saltLength: 16 });
 
         const newUser = await prisma.user.create({
           data: {
@@ -45,11 +47,63 @@ export const userResolvers = {
           },
         });
 
-        const newAccessToken = jwt.sign({ sub: newUser.id }, JWT_SECRET, {
-          expiresIn: "30min",
+        const newAccessToken = jwt.sign(
+          { sub: newUser.id, isRefresh: true },
+          JWT_SECRET,
+          {
+            expiresIn: "15min",
+          }
+        );
+        const refreshToken = jwt.sign({ sub: newUser.id, isRefresh: true }, JWT_SECRET, {
+          expiresIn: "14d",
         });
 
-        return { user: newUser, accessToken: newAccessToken };
+        await setRefreshToken(newUser.id, refreshToken, res);
+
+        return { userData: newUser, accessToken: newAccessToken };
+      } catch (error) {
+        console.error(error);
+        throw new ApolloError(error?.message || error || "Something went wrong!");
+      }
+    },
+    login: async (_: any, { args }: any, { res }: GQLContextType) => {
+      try {
+        const JWT_SECRET = process.env.JWT_SECRET;
+        if (!JWT_SECRET) {
+          throw new ApolloError("Something went wrong on our end!");
+        }
+
+        const existingUser = await prisma.user.findUnique({
+          where: {
+            email: args.email,
+          },
+        });
+        if (!existingUser) {
+          throw new UserInputError("User does not exist!");
+        }
+
+        const doPasswordsMatch = await argon.verify(existingUser.password, args.password);
+        if (!doPasswordsMatch) {
+          throw new UserInputError("Incorrect password!");
+        }
+
+        const accessToken = jwt.sign(
+          { sub: existingUser.id, isRefresh: false },
+          JWT_SECRET,
+          { expiresIn: "15min" }
+        );
+        const refreshToken = jwt.sign(
+          { sub: existingUser.id, isRefresh: true },
+          JWT_SECRET,
+          { expiresIn: "14d" }
+        );
+
+        await setRefreshToken(existingUser.id, refreshToken, res);
+
+        return {
+          userData: existingUser,
+          accessToken,
+        };
       } catch (error) {
         console.error(error);
         throw new ApolloError(error?.message || error || "Something went wrong!");

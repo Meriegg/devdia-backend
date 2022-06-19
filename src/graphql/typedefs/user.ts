@@ -4,8 +4,14 @@ export const userTypeDefs = gql`
   type User {
     id: ID!
     username: String!
-    email: String!
+    email: String
     joined_on: String!
+    r_t: String
+  }
+
+  type AuthResponse {
+    userData: User!
+    accessToken: String!
   }
 
   type Query {
@@ -18,7 +24,13 @@ export const userTypeDefs = gql`
     username: String!
   }
 
+  input LoginInput {
+    email: String!
+    password: String!
+  }
+
   type Mutation {
-    register(args: RegisterInput!): User!
+    register(args: RegisterInput!): AuthResponse!
+    login(args: LoginInput!): AuthResponse!
   }
 `;
