@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import typeDefs from "./graphql/typedefs";
 import resolvers from "./graphql/resolvers";
 import { ApolloServer } from "apollo-server-express";
+import { verifyAccessToken } from "./utils/jwtVerify";
 
 // Initialize dotenv
 dotenv.config();
@@ -16,9 +17,11 @@ dotenv.config();
   const GQLServer = new ApolloServer({
     typeDefs,
     resolvers,
-    context: ({ req, res }) => {
-      return { req, res };
-    },
+    context: ({ req, res }) => ({
+      req,
+      res,
+      userId: verifyAccessToken(req),
+    }),
   });
   await GQLServer.start();
 

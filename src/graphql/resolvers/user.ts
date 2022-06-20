@@ -7,7 +7,7 @@ import { GQLContextType } from "src/types";
 
 export const userResolvers = {
   Query: {
-    getUser: async (_: any, args: any) => {
+    getUser: async (_: any, args: any, { userId }: GQLContextType) => {
       const user = await prisma.user.findUnique({
         where: {
           id: args.id,
