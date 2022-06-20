@@ -1,13 +1,16 @@
 import prisma from "../../prisma/index";
 import jwt from "jsonwebtoken";
 import setRefreshToken from "../../utils/setRefreshToken";
-import { ApolloError, UserInputError } from "apollo-server-express";
+import useProtected from "../../utils/useProtected";
 import * as argon from "argon2";
+import { ApolloError, UserInputError } from "apollo-server-express";
 import { GQLContextType } from "src/types";
 
 export const userResolvers = {
   Query: {
     getUser: async (_: any, args: any, { userId }: GQLContextType) => {
+      useProtected(userId);
+
       const user = await prisma.user.findUnique({
         where: {
           id: args.id,
