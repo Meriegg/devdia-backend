@@ -14,7 +14,8 @@
     "start": "node dist/index.js",
     "dev": "nodemon dist/index.js",
     "key:gen:32": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
-    "key:gen:16": "node -e \"console.log(require('crypto').randomBytes(16).toString('hex'))\""
+    "key:gen:16": "node -e \"console.log(require('crypto').randomBytes(16).toString('hex'))\"",
+    "postinstall": "tsc"
   },
   "private": false,
   "devDependencies": {
