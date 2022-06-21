@@ -46,6 +46,16 @@ export const postResolvers = {
     likePost: async (_: any, { postId }: any, { userId }: GQLContextType) => {
       useProtected(userId);
 
+      const existingLike = await prisma.like.findFirst({
+        where: {
+          user_id: userId,
+          post_id: postId,
+        },
+      });
+      if (existingLike) {
+        return await prisma.like.delete({ where: { id: existingLike?.id } });
+      }
+
       const newLike = await prisma.like.create({
         data: {
           post_id: postId,
