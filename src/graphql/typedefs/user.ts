@@ -7,6 +7,8 @@ export const userTypeDefs = gql`
     email: String
     joined_on: String!
     r_t: String
+    posts: [Post!]
+    liked_posts: [Like!]
   }
 
   type AuthResponse {

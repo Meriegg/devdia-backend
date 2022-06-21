@@ -70,8 +70,6 @@ export const verifyAccessToken = (req: Request): string | null => {
 
     return decoded?.sub;
   } catch (error) {
-    console.error(error);
-
     return null;
   }
 };
