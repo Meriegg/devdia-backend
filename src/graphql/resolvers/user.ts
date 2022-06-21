@@ -3,11 +3,32 @@ import jwt from "jsonwebtoken";
 import setRefreshToken from "../../utils/setRefreshToken";
 import useProtected from "../../utils/useProtected";
 import * as argon from "argon2";
+import { verifyRefreshToken } from "../../utils/jwtVerify";
 import { ApolloError, UserInputError } from "apollo-server-express";
 import { GQLContextType } from "src/types";
 
 export const userResolvers = {
   Query: {
+    refreshToken: async (_: any, __: any, { req, res }: GQLContextType) => {
+      const JWT_SECRET = process.env.JWT_SECRET;
+      if (!JWT_SECRET) {
+        throw new ApolloError("Something went wrong on our end!");
+      }
+
+      const userId = await verifyRefreshToken(req);
+
+      const newAccessToken = jwt.sign({ sub: userId, isRefresh: false }, JWT_SECRET, {
+        expiresIn: "15min",
+      });
+
+      const newRefreshToken = jwt.sign({ sub: userId, isRefresh: true }, JWT_SECRET, {
+        expiresIn: "14d",
+      });
+
+      await setRefreshToken(userId, newRefreshToken, res);
+
+      return newAccessToken;
+    },
     getUser: async (_: any, args: any, { userId }: GQLContextType) => {
       useProtected(userId);
 
@@ -50,22 +71,19 @@ export const userResolvers = {
           },
         });
 
-        const newAccessToken = jwt.sign(
-          { sub: newUser.id, isRefresh: true },
-          JWT_SECRET,
-          {
-            expiresIn: "15min",
-          }
-        );
+        const accessToken = jwt.sign({ sub: newUser.id, isRefresh: false }, JWT_SECRET, {
+          expiresIn: "15min",
+        });
         const refreshToken = jwt.sign({ sub: newUser.id, isRefresh: true }, JWT_SECRET, {
           expiresIn: "14d",
         });
 
         await setRefreshToken(newUser.id, refreshToken, res);
 
-        return { userData: newUser, accessToken: newAccessToken };
+        return { userData: newUser, accessToken };
       } catch (error) {
         console.error(error);
+
         throw new ApolloError(error?.message || error || "Something went wrong!");
       }
     },

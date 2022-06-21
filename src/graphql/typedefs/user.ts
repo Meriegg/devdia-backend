@@ -16,6 +16,7 @@ export const userTypeDefs = gql`
 
   type Query {
     getUser(id: ID!): User!
+    refreshToken: String!
   }
 
   input RegisterInput {
