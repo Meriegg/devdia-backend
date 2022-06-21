@@ -11,12 +11,35 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  email     String   @unique
-  password  String
-  r_t       String?
-  joined_on DateTime @default(now())
+  id          String   @id @default(uuid())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  r_t         String?
+  joined_on   DateTime @default(now())
+  posts       Post[]   @relation("Author")
+  liked_posts Like[]   @relation("LIKE_USER_ID")
 
   @@map("user")
+}
+
+model Like {
+  id      String @id @default(uuid())
+  post_id String
+  user_id String
+
+  post Post @relation(fields: [post_id], references: [id], name: "LIKE_POST_ID")
+  user User @relation(fields: [user_id], references: [id], name: "LIKE_USER_ID")
+  @@map("like")
+}
+
+model Post {
+  id        String  @id @default(uuid())
+  code      String?
+  content   String?
+  author_id String
+  likes     Like[]  @relation("LIKE_POST_ID")
+
+  author User @relation(fields: [author_id], references: [id], name: "Author")
+  @@map("post")
 }
