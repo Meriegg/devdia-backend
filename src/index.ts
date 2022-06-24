@@ -32,7 +32,8 @@ dotenv.config();
   GQLServer.applyMiddleware({
     app,
     cors: {
-      origin: "https://studio.apollographql.com",
+      origin: "http://localhost:3000",
+      // origin: "https://studio.apollographql.com",
       credentials: true,
     },
   });

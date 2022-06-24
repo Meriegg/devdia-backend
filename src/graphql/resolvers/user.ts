@@ -43,6 +43,34 @@ export const userResolvers = {
 
       return user;
     },
+    getMyData: async (_: any, __: any, { userId }: GQLContextType) => {
+      useProtected(userId);
+
+      const user = await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+        include: {
+          liked_posts: {
+            include: {
+              post: {
+                include: {
+                  likes: true,
+                },
+              },
+            },
+          },
+          posts: {
+            include: {
+              likes: true,
+              author: true,
+            },
+          },
+        },
+      });
+
+      return user;
+    },
   },
   Mutation: {
     register: async (_: any, { args }: any, { res }: GQLContextType) => {

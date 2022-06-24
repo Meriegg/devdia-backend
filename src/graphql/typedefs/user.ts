@@ -18,6 +18,7 @@ export const userTypeDefs = gql`
 
   type Query {
     getUser(id: ID!): User!
+    getMyData: User!
     refreshToken: String!
   }
 
